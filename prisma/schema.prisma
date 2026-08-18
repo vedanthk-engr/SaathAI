@@ -1,0 +1,135 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  role              Role      @default(BUYER)
+  name              String?
+  avatarUrl         String?
+  createdAt         DateTime  @default(now())
+  artisanProfile    ArtisanProfile?
+  orders            Order[]
+  reviews           Review[]
+}
+
+enum Role {
+  BUYER
+  ARTISAN
+  ADMIN
+}
+
+model ArtisanProfile {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+  craftTradition    String
+  regionState       String
+  district          String?
+  yearsActive       Int?
+  languagesSpoken   String[]
+  bio               String?
+  voiceIntroUrl     String?
+  isVerified        Boolean   @default(false)
+  products          Product[]
+  createdAt         DateTime  @default(now())
+}
+
+model Product {
+  id                    String    @id @default(cuid())
+  artisanId             String
+  artisan               ArtisanProfile @relation(fields: [artisanId], references: [id])
+  status                ProductStatus @default(DRAFT)
+  photoUrls             String[]
+  voiceNoteUrl          String?
+  rawMaterialCost       Float?
+
+  titleEn               String?
+  descriptionEn         String?
+  titleHi               String?
+  descriptionHi         String?
+  titleRegional         String?
+  descriptionRegional   String?
+  regionalLanguage      String?
+
+  bulletPoints          String[]
+  searchTags            String[]
+  instagramCaption      String?
+  recommendedPriceMin   Float?
+  recommendedPriceMax   Float?
+  pricingRationale      String?
+  listedPrice           Float?
+
+  craftTradition        String?
+  craftRegion           String?
+  giTagStatus           String?
+  unescoStatus          String?
+  provenanceNote        String?
+  authenticityStatement String?
+  authenticityMarkers   String[]
+  audioNarrationUrl     String?
+  embedding             Float[]
+
+  platformStatus        Json?
+  provenanceCertUrl     String?
+
+  orders                Order[]
+  reviews               Review[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Order {
+  id            String    @id @default(cuid())
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id])
+  buyerId       String
+  buyer         User      @relation(fields: [buyerId], references: [id])
+  amount        Float
+  status        OrderStatus @default(PENDING)
+  razorpayId    String?
+  shippingAddr  Json?
+  createdAt     DateTime  @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Review {
+  id          String    @id @default(cuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  buyerId     String
+  buyer       User      @relation(fields: [buyerId], references: [id])
+  rating      Int
+  comment     String?
+  createdAt   DateTime  @default(now())
+}
+
+model CraftTradition {
+  id            String  @id @default(cuid())
+  name          String  @unique
+  region        String
+  state         String
+  giTagNumber   String?
+  unescoStatus  String?
+  description   String?
+  imageUrl      String?
+}
